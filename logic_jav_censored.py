@@ -165,22 +165,19 @@ class LogicJavCensored(LogicModuleBase):
                                 if len(data) > 0 and data[0]['score'] > 95:
                                     entity.move_type = 'dvd'
                                     meta_info = MetadataLogic.get_module('jav_censored').info(data[0]['code'])
-                                    if ModelSetting.get('jav_censored_folder_format_actor') != '' and meta_info['actor'] is not None and len(meta_info['actor']) == 1 and meta_info['actor'][0]['originalname'] != meta_info['actor'][0]['name']:
-                                        folders = ModelSetting.get('jav_censored_folder_format_actor').format(code=meta_info['originaltitle'], label=meta_info['originaltitle'].split('-')[0], actor=meta_info['actor'][0]['name']).split('/')
-                                    else:
-                                        folders = ModelSetting.get('jav_censored_folder_format').format(code=meta_info['originaltitle'], label=meta_info['originaltitle'].split('-')[0]).split('/')
+                                    folders = LogicJavCensored.process_forlder_format(entity.move_type, meta_info)
                                     target_folder = ModelSetting.get('jav_censored_meta_dvd_path')
                                 else:
                                     data = MetadataLogic.get_module('jav_censored_ama').search(search_name, all_find=True, do_trans=False)
                                     if len(data) > 0 and data[0]['score'] > 95:
                                         entity.move_type = 'ama'
                                         meta_info = MetadataLogic.get_module('jav_censored_ama').info(data[0]['code'])
+                                        folders = LogicJavCensored.process_forlder_format(entity.move_type, meta_info)
                                         target_folder = ModelSetting.get('jav_censored_meta_ama_path')
-                                        folders = ModelSetting.get('jav_censored_folder_format').format(code=meta_info['originaltitle'], label=meta_info['originaltitle'].split('-')[0]).split('/')
                                     else:
                                         entity.move_type = 'no_meta'
                                         target_folder = ModelSetting.get('jav_censored_meta_no_path')
-                                        folders = ModelSetting.get('jav_censored_folder_format').format(code=search_name.replace(' ', '-').upper(), label=search_name.split(' ')[0].upper()).split('/')
+                                        folders = LogicJavCensored.process_forlder_format(entity.move_type, search_name)
                                 target_folder = os.path.join(target_folder, *folders)
                             except Exception as e:
                                 logger.debug('Exception:%s', e)
@@ -218,6 +215,38 @@ class LogicJavCensored(LogicModuleBase):
             logger.debug('Exception:%s', e)
             logger.debug(traceback.format_exc())
 
+
+    @staticmethod
+    def process_forlder_format(meta_type, meta_info):
+        folders = None
+        if meta_type == 'no_meta':
+            folders = ModelSetting.get('jav_censored_folder_format').format(
+                code=meta_info.replace(' ', '-').upper(), 
+                label=meta_info.split(' ')[0].upper()
+            ).split('/')
+        else:
+            studio = meta_info['studio'] if 'studio' in meta_info and meta_info['studio'] is not None and meta_info['studio'] != '' else 'NO_STUDIO'
+            code=meta_info['originaltitle']
+            label = meta_info['originaltitle'].split('-')[0]
+            label_1 = label[0]
+            if meta_type == 'dvd':
+                if ModelSetting.get('jav_censored_folder_format_actor') != '' and meta_info['actor'] is not None and len(meta_info['actor']) == 1 and meta_info['actor'][0]['originalname'] != meta_info['actor'][0]['name']:
+                    folders = ModelSetting.get('jav_censored_folder_format_actor').format(
+                        code=code, 
+                        label=label, 
+                        actor=meta_info['actor'][0]['name'], 
+                        studio=studio,
+                        label_1=label_1
+                    ).split('/')
+            
+            if folders is None:
+                folders = ModelSetting.get('jav_censored_folder_format').format(
+                    code=code, 
+                    label=label,
+                    studio=studio,
+                    label_1=label_1
+                ).split('/')
+        return folders
 
     @staticmethod
     def check_newfilename(filename, newfilename, file_path):
