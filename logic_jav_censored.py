@@ -110,9 +110,9 @@ class LogicJavCensored(LogicModuleBase):
 
             for path in source:
                 filelist = os.listdir(path.strip())
-                logger.debug('FILELIST LEN :%s', len(filelist))
-                for filename in filelist:
-                    #logger.debug('CENSORED filename : %s', filename)    
+                count = len(filelist)
+                for idx, filename in enumerate(filelist):
+                    logger.debug('%s / %s : filename : %s', idx, count, filename)    
                     file_path = os.path.join(path, filename)
                     if os.path.isdir(file_path):
                         continue
