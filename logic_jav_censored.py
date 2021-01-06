@@ -222,7 +222,8 @@ class LogicJavCensored(LogicModuleBase):
         if meta_type == 'no_meta':
             folders = ModelSetting.get('jav_censored_folder_format').format(
                 code=meta_info.replace(' ', '-').upper(), 
-                label=meta_info.split(' ')[0].upper()
+                label=meta_info.split(' ')[0].upper(), 
+                label_1=meta_info.split(' ')[0].upper()[0]
             ).split('/')
         else:
             studio = meta_info['studio'] if 'studio' in meta_info and meta_info['studio'] is not None and meta_info['studio'] != '' else 'NO_STUDIO'
