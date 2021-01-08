@@ -51,6 +51,8 @@ class LogicJavCensored(LogicModuleBase):
         'jav_censored_meta_no_path' : '',
         'jav_censored_make_nfo' : 'False',
         'jav_censored_last_list_option' : '',
+
+        'jav_censored_filename_test' : '',
     }
 
     def __init__(self, P):
@@ -73,6 +75,13 @@ class LogicJavCensored(LogicModuleBase):
                 return jsonify(ModelJavcensoredItem.web_list(request))
             elif sub == 'db_remove':
                 return jsonify(ModelJavcensoredItem.delete_by_id(req.form['id']))
+            elif sub == 'filename_test':
+                filename = req.form['filename']
+                ModelSetting.set('jav_censored_filename_test', filename)
+                newfilename = ToolExpandFileProcess.change_filename_censored(filename)
+                newfilename = LogicJavCensored.check_newfilename(filename, newfilename, None)
+                return jsonify({'ret':'success', 'data':newfilename})
+
         except Exception as e: 
             P.logger.error('Exception:%s', e)
             P.logger.error(traceback.format_exc())
@@ -292,7 +301,7 @@ class LogicJavCensored(LogicModuleBase):
                 ori_name = ori_name.replace('[', '(').replace(']', ')').strip()
                 if part is None:
                     option = ModelSetting.get('jav_censored_include_original_filename_option')
-                    if option == '0':
+                    if option == '0' or original_filepath is None:
                         return '%s [%s]%s' % (new_name, ori_name, new_ext)
                     elif option == '1':
                         return '%s [%s(%s)]%s' % (new_name, ori_name, os.stat(original_filepath).st_size, new_ext)
