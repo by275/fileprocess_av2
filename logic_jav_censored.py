@@ -107,123 +107,131 @@ class LogicJavCensored(LogicModuleBase):
     @staticmethod
     @celery.task
     def task():
-        try:
-            source = LogicJavCensored.get_path_list('jav_censored_download_path')
-            target = LogicJavCensored.get_path_list('jav_censored_target_path')
-            if len(source) == 0 or ModelSetting.get('jav_censored_temp_path') == '' or ModelSetting.get('jav_censored_min_size_path') == '':
-                logger.info('Error censored. path info is empty')
+        while True:
+            try:
+                total_count = 0
+                source = LogicJavCensored.get_path_list('jav_censored_download_path')
+                target = LogicJavCensored.get_path_list('jav_censored_target_path')
+                if len(source) == 0 or ModelSetting.get('jav_censored_temp_path') == '' or ModelSetting.get('jav_censored_min_size_path') == '':
+                    logger.info('Error censored. path info is empty')
 
-            no_censored_path = ModelSetting.get('jav_censored_temp_path')
-            for path in source:
-                ToolExpandFileProcess.remove_small_file_and_move_target(path, ModelSetting.get_int('jav_censored_min_size'), small_move_path=ModelSetting.get('jav_censored_min_size_path'))
+                no_censored_path = ModelSetting.get('jav_censored_temp_path')
+                for path in source:
+                    ToolExpandFileProcess.remove_small_file_and_move_target(path, ModelSetting.get_int('jav_censored_min_size'), small_move_path=ModelSetting.get('jav_censored_min_size_path'))
 
-            for path in source:
-                filelist = os.listdir(path.strip())
-                count = len(filelist)
-                for idx, filename in enumerate(filelist):
-                    logger.debug('%s / %s : filename : %s', idx, count, filename)    
-                    file_path = os.path.join(path, filename)
-                    if os.path.isdir(file_path):
-                        continue
-                    
-                    newfilename = ToolExpandFileProcess.change_filename_censored(filename)
-                    logger.debug('newfilename : %s', newfilename)
-                    
-                    if newfilename is None: 
-                        shutil.move(os.path.join(path, filename), os.path.join(no_censored_path, filename))
-                        continue
-
-                    try:
-                        entity = ModelJavcensoredItem(path, filename)
-                        newfilename = LogicJavCensored.check_newfilename(filename, newfilename, file_path)
+                
+                for path in source:
+                    filelist = os.listdir(path.strip())
+                    count = len(filelist)
+                    total_count += count
+                    for idx, filename in enumerate(filelist):
+                        logger.debug('%s / %s : filename : %s', idx, count, filename)    
+                        file_path = os.path.join(path, filename)
+                        if os.path.isdir(file_path):
+                            continue
                         
-                        # 검색용 키워드
-                        search_name = ToolExpandFileProcess.change_filename_censored(newfilename)
-                        search_name = os.path.splitext(search_name)[0].replace('-', ' ')
-                        search_name = re.sub('\s*\[.*?\]', '', search_name).strip()
-                        match = re.search(r'(?P<cd>cd\d{1,2})$', search_name) 
-                        if match:
-                            search_name = search_name.replace(match.group('cd'), '')
-                        logger.debug(search_name)
+                        newfilename = ToolExpandFileProcess.change_filename_censored(filename)
+                        logger.debug('newfilename : %s', newfilename)
                         
+                        if newfilename is None: 
+                            shutil.move(os.path.join(path, filename), os.path.join(no_censored_path, filename))
+                            continue
 
-                        censored_use_meta = ModelSetting.get('jav_censored_use_meta')
-                        target_folder = None
-
-                        if censored_use_meta == '0':
-                            folders = ModelSetting.get('jav_censored_folder_format').format(code=search_name.replace(' ', '-').upper(), label=search_name.split(' ')[0].upper()).split('/')
-                            # 첫번째 자식폴더만 타겟에서 찾는다.
-                            for tmp in target:
-                                if os.path.exists(os.path.join(tmp.strip(), folders[0])):
-                                    target_folder = os.path.join(tmp.strip(), folders[0])
-                                    break
-                            if target_folder is None:
-                                target_folder = os.path.join(target[0], *folders)
-                            entity.move_type = 'normal'
-                        else: 
-                            #메타 처리   
-                            logger.debug(search_name)
-                            try:
-                                from metadata import Logic as MetadataLogic
-                                #def search(self, keyword, all_find=False, do_trans=do_trans):
-                                data = MetadataLogic.get_module('jav_censored').search(search_name, all_find=True, do_trans=False)
-                                logger.debug(data)
-                                meta_info = None
-                                folders = None
-
-                                if len(data) > 0 and data[0]['score'] > 95:
-                                    entity.move_type = 'dvd'
-                                    meta_info = MetadataLogic.get_module('jav_censored').info(data[0]['code'])
-                                    folders = LogicJavCensored.process_forlder_format(entity.move_type, meta_info)
-                                    target_folder = ModelSetting.get('jav_censored_meta_dvd_path')
-                                else:
-                                    data = MetadataLogic.get_module('jav_censored_ama').search(search_name, all_find=True, do_trans=False)
-                                    if len(data) > 0 and data[0]['score'] > 95:
-                                        entity.move_type = 'ama'
-                                        meta_info = MetadataLogic.get_module('jav_censored_ama').info(data[0]['code'])
-                                        folders = LogicJavCensored.process_forlder_format(entity.move_type, meta_info)
-                                        target_folder = ModelSetting.get('jav_censored_meta_ama_path')
-                                    else:
-                                        entity.move_type = 'no_meta'
-                                        target_folder = ModelSetting.get('jav_censored_meta_no_path')
-                                        folders = LogicJavCensored.process_forlder_format(entity.move_type, search_name)
-                                target_folder = os.path.join(target_folder, *folders)
-                            except Exception as e:
-                                logger.debug('Exception:%s', e)
-                                logger.debug(traceback.format_exc())
-                        
-                        logger.debug('target_folder : %s', target_folder)
-                        dest_filepath = os.path.join(target_folder, newfilename)
-                        logger.debug('MOVE : %s %s' % (filename, dest_filepath))
-                        entity.target_dir = target_folder
-                        entity.target_filename = newfilename
-
-                        if not os.path.exists(target_folder):
-                            os.makedirs(target_folder)    
-
-                        if os.path.exists(dest_filepath):
-                            logger.debug('EXISTS : %s', dest_filepath)
-                            os.remove(file_path)
-                            entity.move_type += '_already_exist'
+                        try:
+                            entity = ModelJavcensoredItem(path, filename)
+                            newfilename = LogicJavCensored.check_newfilename(filename, newfilename, file_path)
                             
-                        if os.path.exists(file_path):
-                            shutil.move(os.path.join(path, filename), dest_filepath)
+                            # 검색용 키워드
+                            search_name = ToolExpandFileProcess.change_filename_censored(newfilename)
+                            search_name = os.path.splitext(search_name)[0].replace('-', ' ')
+                            search_name = re.sub('\s*\[.*?\]', '', search_name).strip()
+                            match = re.search(r'(?P<cd>cd\d{1,2})$', search_name) 
+                            if match:
+                                search_name = search_name.replace(match.group('cd'), '')
+                            logger.debug(search_name)
+                            
 
-                        if (entity.move_type == 'dvd' or entity.move_type == 'ama') and ModelSetting.get_bool('jav_censored_make_nfo'):
-                            from lib_metadata.util_nfo import UtilNfo
-                            savepath = os.path.join(target_folder, 'movie.nfo')
-                            if not os.path.exists(savepath):
-                                ret = UtilNfo.make_nfo_movie(meta_info, output='save', savepath=savepath)
-                        #return
-                    except Exception as e:
-                        logger.debug('Exception:%s', e)
-                        logger.debug(traceback.format_exc())
-                    finally:
-                        entity.save()
-        except Exception as e:
-            logger.debug('Exception:%s', e)
-            logger.debug(traceback.format_exc())
+                            censored_use_meta = ModelSetting.get('jav_censored_use_meta')
+                            target_folder = None
 
+                            if censored_use_meta == '0':
+                                folders = ModelSetting.get('jav_censored_folder_format').format(code=search_name.replace(' ', '-').upper(), label=search_name.split(' ')[0].upper()).split('/')
+                                # 첫번째 자식폴더만 타겟에서 찾는다.
+                                for tmp in target:
+                                    if os.path.exists(os.path.join(tmp.strip(), folders[0])):
+                                        target_folder = os.path.join(tmp.strip(), folders[0])
+                                        break
+                                if target_folder is None:
+                                    target_folder = os.path.join(target[0], *folders)
+                                entity.move_type = 'normal'
+                            else: 
+                                #메타 처리   
+                                logger.debug(search_name)
+                                try:
+                                    from metadata import Logic as MetadataLogic
+                                    #def search(self, keyword, all_find=False, do_trans=do_trans):
+                                    data = MetadataLogic.get_module('jav_censored').search(search_name, all_find=True, do_trans=False)
+                                    logger.debug(data)
+                                    meta_info = None
+                                    folders = None
+
+                                    if len(data) > 0 and data[0]['score'] > 95:
+                                        entity.move_type = 'dvd'
+                                        meta_info = MetadataLogic.get_module('jav_censored').info(data[0]['code'])
+                                        folders = LogicJavCensored.process_forlder_format(entity.move_type, meta_info)
+                                        target_folder = ModelSetting.get('jav_censored_meta_dvd_path')
+                                    else:
+                                        data = MetadataLogic.get_module('jav_censored_ama').search(search_name, all_find=True, do_trans=False)
+                                        if len(data) > 0 and data[0]['score'] > 95:
+                                            entity.move_type = 'ama'
+                                            meta_info = MetadataLogic.get_module('jav_censored_ama').info(data[0]['code'])
+                                            folders = LogicJavCensored.process_forlder_format(entity.move_type, meta_info)
+                                            target_folder = ModelSetting.get('jav_censored_meta_ama_path')
+                                        else:
+                                            entity.move_type = 'no_meta'
+                                            target_folder = ModelSetting.get('jav_censored_meta_no_path')
+                                            folders = LogicJavCensored.process_forlder_format(entity.move_type, search_name)
+                                    target_folder = os.path.join(target_folder, *folders)
+                                except Exception as e:
+                                    logger.debug('Exception:%s', e)
+                                    logger.debug(traceback.format_exc())
+                            
+                            logger.debug('target_folder : %s', target_folder)
+                            dest_filepath = os.path.join(target_folder, newfilename)
+                            logger.debug('MOVE : %s %s' % (filename, dest_filepath))
+                            entity.target_dir = target_folder
+                            entity.target_filename = newfilename
+
+                            if not os.path.exists(target_folder):
+                                os.makedirs(target_folder)    
+
+                            if os.path.exists(dest_filepath):
+                                logger.debug('EXISTS : %s', dest_filepath)
+                                os.remove(file_path)
+                                entity.move_type += '_already_exist'
+                                
+                            if os.path.exists(file_path):
+                                shutil.move(os.path.join(path, filename), dest_filepath)
+
+                            if (entity.move_type == 'dvd' or entity.move_type == 'ama') and ModelSetting.get_bool('jav_censored_make_nfo'):
+                                from lib_metadata.util_nfo import UtilNfo
+                                savepath = os.path.join(target_folder, 'movie.nfo')
+                                if not os.path.exists(savepath):
+                                    ret = UtilNfo.make_nfo_movie(meta_info, output='save', savepath=savepath)
+                            #return
+                        except Exception as e:
+                            logger.debug('Exception:%s', e)
+                            logger.debug(traceback.format_exc())
+                        finally:
+                            entity.save()
+            except Exception as e:
+                logger.debug('Exception:%s', e)
+                logger.debug(traceback.format_exc())
+            if total_count == 0:
+                logger.debug('file-processing  count is 0. stop.............')
+                break
+            else:
+                logger.debug('file-processing  count is %s. do repeat.................' % total_count)
 
     @staticmethod
     def process_forlder_format(meta_type, meta_info):
