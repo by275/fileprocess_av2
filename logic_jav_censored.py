@@ -182,12 +182,18 @@ class LogicJavCensored(LogicModuleBase):
                                         target_folder = ModelSetting.get('jav_censored_meta_dvd_path')
                                     else:
                                         data = MetadataLogic.get_module('jav_censored_ama').search(search_name, all_find=True, do_trans=False)
-                                        if len(data) > 0 and data[0]['score'] > 95:
+                                        process_no_meta = False
+                                        if data is not None and len(data) > 0 and data[0]['score'] > 95:
                                             entity.move_type = 'ama'
                                             meta_info = MetadataLogic.get_module('jav_censored_ama').info(data[0]['code'])
-                                            folders = LogicJavCensored.process_forlder_format(entity.move_type, meta_info)
-                                            target_folder = ModelSetting.get('jav_censored_meta_ama_path')
+                                            if meta_info is not None:
+                                                folders = LogicJavCensored.process_forlder_format(entity.move_type, meta_info)
+                                                target_folder = ModelSetting.get('jav_censored_meta_ama_path')
+                                            else:
+                                                process_no_meta = True
                                         else:
+                                            process_no_meta = True
+                                        if process_no_meta:
                                             entity.move_type = 'no_meta'
                                             target_folder = ModelSetting.get('jav_censored_meta_no_path')
                                             folders = LogicJavCensored.process_forlder_format(entity.move_type, search_name)
