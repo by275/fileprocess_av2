@@ -322,6 +322,8 @@ class LogicJavCensored(LogicModuleBase):
                     elif option == '2':
                         from framework.util import Util
                         return '%s [%s(%s)]%s' % (new_name, ori_name, Util.sizeof_fmt(os.stat(original_filepath).st_size, suffix='B'), new_ext)
+                    elif option == '3':
+                        return '%s [%s]%s' % (new_name, os.stat(original_filepath).st_size, new_ext)
                     return '%s [%s]%s' % (new_name, ori_name, new_ext)
                 else:
                     #안씀
