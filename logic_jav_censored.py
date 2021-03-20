@@ -249,10 +249,16 @@ class LogicJavCensored(LogicModuleBase):
                 label_1=meta_info.split(' ')[0].upper()[0]
             ).split('/')
         else:
+            id_before = match.group(0)
+            filename = filename.lower().replace(id_before, 'zzid') 
             studio = meta_info['studio'] if 'studio' in meta_info and meta_info['studio'] is not None and meta_info['studio'] != '' else 'NO_STUDIO'
             code=meta_info['originaltitle']
             label = meta_info['originaltitle'].split('-')[0]
+            match = re.compile('\d{2}id', re.I).search(label)
+            if match:
+                label = 'ID'
             label_1 = label[0]
+            
             if meta_type == 'dvd':
                 if ModelSetting.get('jav_censored_folder_format_actor') != '' and meta_info['actor'] is not None and len(meta_info['actor']) == 1 and meta_info['actor'][0]['originalname'] != meta_info['actor'][0]['name'] and meta_info['actor'][0]['name'] != '':
                     folders = ModelSetting.get('jav_censored_folder_format_actor').format(
