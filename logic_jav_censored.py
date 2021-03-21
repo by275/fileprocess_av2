@@ -251,8 +251,6 @@ class LogicJavCensored(LogicModuleBase):
                 label_1=meta_info.split(' ')[0].upper()[0]
             ).split('/')
         else:
-            id_before = match.group(0)
-            filename = filename.lower().replace(id_before, 'zzid') 
             studio = meta_info['studio'] if 'studio' in meta_info and meta_info['studio'] is not None and meta_info['studio'] != '' else 'NO_STUDIO'
             code=meta_info['originaltitle']
             label = meta_info['originaltitle'].split('-')[0]
