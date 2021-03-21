@@ -107,8 +107,10 @@ class LogicJavCensored(LogicModuleBase):
     @staticmethod
     @celery.task
     def task():
+        repeat_count = 0
         while True:
             try:
+                repeat_count += 1
                 total_count = 0
                 source = LogicJavCensored.get_path_list('jav_censored_download_path')
                 target = LogicJavCensored.get_path_list('jav_censored_target_path')
@@ -233,7 +235,7 @@ class LogicJavCensored(LogicModuleBase):
             except Exception as e:
                 logger.debug('Exception:%s', e)
                 logger.debug(traceback.format_exc())
-            if total_count == 0:
+            if total_count == 0 or repeat_count = 0 > 10:
                 logger.debug('file-processing  count is 0. stop.............')
                 break
             else:
