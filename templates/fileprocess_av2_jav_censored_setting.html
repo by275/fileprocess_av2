@@ -32,6 +32,7 @@
       <div id="jav_censored_use_meta_on_div" class="collapse">
         {{ macros.setting_checkbox('jav_censored_make_nfo', 'NFO 파일 생성', value=arg['jav_censored_make_nfo'], desc=['On : NFO 파일을 생성합니다.', '품번 폴더를 생성할 수 있게 폴더 구조가 {code}로 끝나야 합니다.']) }}
         {{ macros.setting_input_text('jav_censored_meta_dvd_path', '정식발매 영상 매칭시 이동 경로', desc=['정식발매 영상 매칭시 이동할 루트 폴더입니다.'], value=arg['jav_censored_meta_dvd_path']) }}
+        {{ macros.setting_input_text('jav_censored_meta_dvd_vr_path', '정식발매 영상 매칭 + VR영상 이동 경로', desc=['빈값이면 VR영상을 따로 분리하지 않습니다.'], value=arg['jav_censored_meta_dvd_vr_path']) }}
         {{ macros.setting_input_text('jav_censored_meta_ama_path', '그외 매칭시 이동 경로', desc=['그외 매칭시(아마) 이동할 루트 폴더입니다.'], value=arg['jav_censored_meta_ama_path']) }}
         {{ macros.setting_input_text('jav_censored_meta_no_path', '메타가 없을때 이동 경로', desc=['메타가 없을때 이동할 루트 폴더입니다.'], value=arg['jav_censored_meta_no_path']) }}
       </div>
