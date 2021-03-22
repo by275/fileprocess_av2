@@ -172,8 +172,7 @@ class LogicJavCensored(LogicModuleBase):
                                 logger.debug(search_name)
                                 try:
                                     from metadata import Logic as MetadataLogic
-                                    #def search(self, keyword, all_find=False, do_trans=do_trans):
-                                    data = MetadataLogic.get_module('jav_censored').search(search_name, all_find=True, do_trans=False)
+                                    data = MetadataLogic.get_module('jav_censored').search(search_name, manual=False)
                                     logger.debug(data)
                                     meta_info = None
                                     folders = None
@@ -188,7 +187,7 @@ class LogicJavCensored(LogicModuleBase):
                                             if vr_path != '':
                                                 target_folder = vr_path
                                     else:
-                                        data = MetadataLogic.get_module('jav_censored_ama').search(search_name, all_find=True, do_trans=False)
+                                        data = MetadataLogic.get_module('jav_censored_ama').search(search_name, manual=False)
                                         process_no_meta = False
                                         if data is not None and len(data) > 0 and data[0]['score'] > 95:
                                             entity.move_type = 'ama'
