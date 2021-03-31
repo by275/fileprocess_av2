@@ -224,9 +224,9 @@ class LogicJavCensored(LogicModuleBase):
                                 if remove_path == '':
                                     os.remove(file_path)
                                 else:
-                                    dup = os.path.join(remove_path, newfilename)
+                                    dup = os.path.join(remove_path, filename)
                                     if os.path.exists(dup):
-                                        dup = os.path.join(remove_path, '[%d] %s' % (time.time(), newfilename))
+                                        dup = os.path.join(remove_path, '[%d] %s' % (time.time(), filename))
                                     shutil.move(file_path, dup)
                                 entity.move_type += '_already_exist'
                                 
