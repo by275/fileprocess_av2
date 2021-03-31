@@ -54,6 +54,7 @@ class LogicJavCensored(LogicModuleBase):
         'jav_censored_last_list_option' : '',
 
         'jav_censored_filename_test' : '',
+        'jav_censored_remove_path' : '',
     }
 
     def __init__(self, P):
@@ -219,7 +220,14 @@ class LogicJavCensored(LogicModuleBase):
 
                             if os.path.exists(dest_filepath):
                                 logger.debug('EXISTS : %s', dest_filepath)
-                                os.remove(file_path)
+                                remove_path = ModelSetting.get('jav_censored_remove_path')
+                                if remove_path == '':
+                                    os.remove(file_path)
+                                else:
+                                    dup = os.path.join(remove_path, newfilename)
+                                    if os.path.exists(dup):
+                                        dup = os.path.join(remove_path, '[%d] %s' % (time.time(), newfilename))
+                                    shutil.move(file_path, dup)
                                 entity.move_type += '_already_exist'
                                 
                             if os.path.exists(file_path):
