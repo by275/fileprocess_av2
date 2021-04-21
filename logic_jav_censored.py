@@ -300,7 +300,11 @@ class LogicJavCensored(LogicModuleBase):
         # adn-091-uncenrosed.mp4 
         # 같이 시작하더라도 [] 가 없다면... 변경
         # [] 없거나, 시작이 다르면..  완벽히 일치 하지 않으면
-        if filename != newfilename and ((filename.find('[') == -1 or filename.find(']') == -1) or not os.path.splitext(filename)[0].startswith(os.path.splitext(newfilename)[0])):
+
+        # 2021-04-21 ??????
+        if filename == newfilename and filename.find('[') == -1 and filename.find(']') == -1:
+            newfilename = LogicJavCensored.change_filename_censored_by_save_original(filename, newfilename, file_path)
+        elif filename != newfilename and ((filename.find('[') == -1 or filename.find(']') == -1) or not os.path.splitext(filename)[0].startswith(os.path.splitext(newfilename)[0])):
             newfilename = LogicJavCensored.change_filename_censored_by_save_original(filename, newfilename, file_path)
         else:
             # 이미 한번 파일처리를 한것으로 가정하여 변경하지 않는다.
