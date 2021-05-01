@@ -152,9 +152,8 @@ class LogicJavCensored(LogicModuleBase):
                             match = re.search(r'(?P<cd>cd\d{1,2})$', search_name) 
                             if match:
                                 search_name = search_name.replace(match.group('cd'), '')
-                            logger.debug(search_name)
                             
-
+                            
                             censored_use_meta = ModelSetting.get('jav_censored_use_meta')
                             target_folder = None
 
@@ -210,6 +209,20 @@ class LogicJavCensored(LogicModuleBase):
                                     logger.debug(traceback.format_exc())
                             
                             logger.debug('target_folder : %s', target_folder)
+                            
+                            # 2021-04-30
+                            try:
+                                tmp = os.path.splitext(filename)
+                                if tmp[0].lower().endswith('-c') or tmp[0].lower().endswith('-c]'):
+                                    for cd in ['1', '2', '4']:
+                                        cd_tmp = os.path.join(target_folder, '%scd%s%s' % (search_name.replace(' ', '-'), cd, tmp[1]))
+                                        if os.path.exists(os.path.join(target_folder, '%scd%s%s' % (search_name.replace(' ', '-'), cd, tmp[1]))):
+                                            newfilename = '%scd3%s' % (search_name.replace(' ', '-'), tmp[1])
+                                            break
+                            except Exception as e:
+                                    logger.debug('Exception:%s', e)
+                                    logger.debug(traceback.format_exc())
+
                             dest_filepath = os.path.join(target_folder, newfilename)
                             logger.debug('MOVE : %s %s' % (filename, dest_filepath))
                             entity.target_dir = target_folder

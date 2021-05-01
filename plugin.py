@@ -25,12 +25,15 @@ class P(object):
     menu = {
         'main' : [package_name, u'AV v2'],
         'sub' : [
-            ['jav_censored', u'JavCensored'], ['log', u'로그']
+            ['jav_censored', u'JavCensored'], ['jav_censored_tool', 'JavCensored Tool'], ['log', u'로그']
         ], 
         'category' : 'fileprocess',
         'sub2' : {
             'jav_censored' : [
                 ['setting', u'설정'], ['list', '처리결과'],
+            ],
+            'jav_censored_tool' : [
+                ['cd3', u'cd3 변경'],
             ],
         }
     }  
@@ -58,7 +61,8 @@ def initialize():
         Util.save_from_dict_to_json(P.plugin_info, os.path.join(os.path.dirname(__file__), 'info.json'))
 
         from .logic_jav_censored import LogicJavCensored
-        P.module_list = [LogicJavCensored(P)]
+        from .logic_jav_censored_tool import LogicJavCensoredTool
+        P.module_list = [LogicJavCensored(P), LogicJavCensoredTool(P)]
         P.logic = Logic(P)
         default_route(P)
     except Exception as e: 
