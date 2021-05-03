@@ -29,6 +29,7 @@ class LogicJavCensoredTool(LogicModuleBase):
         'jav_censored_tool_cd3_path' : '',
         'jav_censored_tool_cd3_auto_change' : 'False',
         'jav_censored_tool_cd3_stop_flag' : 'False',
+        'jav_censored_tool_play_filepath' : '',
     }
 
 
@@ -99,6 +100,10 @@ class LogicJavCensoredTool(LogicModuleBase):
                         fix_data = code_data['fix_files'][int(arg1[1])]
                         fix_data['ret'] = 'delete_' + str(ToolShutil.remove(os.path.join(code_data['base'], fix_data['filename'])))
                         return jsonify({'ret':'success', 'msg':u'파일을 삭제합니다.<br>' + arg2, 'list_data':{'data':self.cd3_data, 'status':self.is_working}})
+                elif name == 'play':
+                    if command == 'save_filename':
+                        ModelSetting.set('jav_censored_tool_play_filepath', req.form['arg1'])
+                        return jsonify({})
 
         except Exception as e: 
             P.logger.error('Exception:%s', e)
@@ -159,7 +164,8 @@ class LogicJavCensoredTool(LogicModuleBase):
                     code_files = glob.glob('%s/%s*' % (base, code))
                     tmp = [] 
                     for code_file in code_files:
-                        tmp.append(os.path.split(code_file)[-1])
+                        entity = {'filename':os.path.split(code_file)[-1]}
+                        tmp.append(entity)
                     code_files = tmp
 
                     fix_files = []
@@ -168,16 +174,16 @@ class LogicJavCensoredTool(LogicModuleBase):
                     if len(code_files) == 1:
                         #change_files.append({'filename' : tmp, 'newfilename':'%%s' % (code, os.path.splitext(tmp)[-1])})
                         data = {'base':base, 'code':code, 'files':code_files}
-                        fix_files.append({'ret':'', 'filename' : code_files[0], 'newfilename':'%s%s' % (code, os.path.splitext(code_files[0])[-1])})
+                        fix_files.append({'ret':'', 'filename' : code_files[0]['filename'], 'newfilename':'%s%s' % (code, os.path.splitext(code_files[0]['filename'])[-1])})
                         pass
                     else:
                         for code_file in code_files:
-                            if not code_file.startswith('%scd' % code):
-                                auto_target = {'ret':'', 'filename' : code_file, 'newfilename':'%scd3%s' % (code, os.path.splitext(code_file)[-1])}
+                            if not code_file['filename'].startswith('%scd' % code):
+                                auto_target = {'ret':'', 'filename' : code_file['filename'], 'newfilename':'%scd3%s' % (code, os.path.splitext(code_file['filename'])[-1])}
                                 fix_files.append(auto_target)
                                 count += 1
                             else:
-                                fix_files.append({'ret':'', 'filename' : code_file, 'newfilename':code_file})
+                                fix_files.append({'ret':'', 'filename' : code_file['filename'], 'newfilename':code_file['filename']})
 
                     if ModelSetting.get_bool('jav_censored_tool_cd3_auto_change'):
                         if count == 1 and auto_target is not None:
@@ -187,6 +193,16 @@ class LogicJavCensoredTool(LogicModuleBase):
                                   
                     if count > 0 :
                         data = {'base':base, 'code':code, 'files':code_files, 'fix_files':fix_files}
+                        for code_file in code_files:
+                            try:
+                                import ffmpeg
+                                code_file['info'] = ffmpeg.get_video_info(os.path.join(base, code_file['filename']))
+                                code_file['info']['format']['duration_str'] = code_file['info']['format']['duration'].split('.')[0]
+                                tmp = int(code_file['info']['format']['duration_str'])
+                                code_file['info']['format']['duration_str'] = '%02d:%02d:%02d' % ((tmp/3600), (tmp % 3600) / 60, tmp % 60)
+                            except Exception as exception: 
+                                logger.error('Exception:%s', exception)
+                                logger.error(traceback.format_exc())
                         if app.config['config']['use_celery']:
                             self.update_state(state='PROGRESS', meta=data)
                         else:

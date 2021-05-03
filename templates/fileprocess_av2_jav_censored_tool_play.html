@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+{{ macros.setting_input_text_and_buttons('jav_censored_tool_play_filepath', 'Path', [['select_file_btn', '파일 선택'], ['play_file_btn', 'Play']], value=arg['jav_censored_tool_play_filepath'],  ) }}
+{{ macros.m_row_start('0') }}
+{{ macros.m_row_end() }}
+{{ macros.m_button_group([['command_start_btn', '시작'],['command_start2_btn', '시작(자동변경)'], ['command_stop_btn', '중지']])}}
+
+{{ macros.m_row_start('0') }}
+{{ macros.m_row_end() }}
+
+<script type="text/javascript">
+
+var package_name = "{{arg['package_name'] }}";
+var sub = "{{arg['sub']}}";
+var current_data = null;
+
+
+$(document).ready(function(){
+});
+
+
+
+$("body").on('click', '#select_file_btn', function(e){
+  e.preventDefault();
+  var path = $('#jav_censored_tool_play_filepath').val().trim();
+  if (path == '') path = '/'
+  m_select_local_file_modal("Play 파일선택", path, false, function(result){
+    $('#jav_censored_tool_play_filepath').val(result);
+    $.ajax({
+      url: '/' + package_name + '/ajax/' + sub + '/send_command',
+      type: "POST", 
+      cache: false,
+      data:{name:'play', command:'save_filename', arg1:result, arg2:''},
+      dataType: "json",
+      success: function (ret) {
+      }
+    });
+  });
+});
+
+
+$("body").on('click', '#play_file_btn', function(e){
+  e.preventDefault();
+  var idx = $(this).data('idx');
+  var filename = $('#jav_censored_tool_play_filepath').val();
+  url = window.location.protocol + "//" + window.location.host + '/ffmpeg/streaming?mode=file&value=' + filename;
+  document.getElementById("video_modal_title").innerHTML = filename;
+  str = '<video oncontextmenu="return false;" id="video_modal_video" width="766" controls autoplay muted preload="metadata">';
+  console.log(url);
+  if (filename.endsWith('.mp4')) {
+    str += '<source src="' + url + '" type="video/mp4"></video>';
+      console.log('11111');
+  } else {
+    str += '<source src="' + url + '" type="video/webm"></video>';
+      console.log('2222');
+  }
+  
+  document.getElementById("video_player_body").innerHTML = str;
+  $("#video_modal").modal();
+});
+
+
+
+
+
+
+</script> 
+
+{% endblock %}

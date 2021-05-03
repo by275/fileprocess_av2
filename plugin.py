@@ -33,7 +33,7 @@ class P(object):
                 ['setting', u'설정'], ['list', '처리결과'],
             ],
             'jav_censored_tool' : [
-                ['cd3', u'cd3 변경'],
+                ['cd3', u'cd3 변경'],  #['play', u'play'],
             ],
         }
     }  

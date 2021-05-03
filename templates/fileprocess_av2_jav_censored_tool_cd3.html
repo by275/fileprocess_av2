@@ -54,7 +54,14 @@ function make_list(data2) {
       tmp = '<b>폴더</b> : ' + data[i].base;
       tmp += '<br><b>코드 파일 목록</b><br>'
       for (j in data[i].files) {
-        tmp += data[i].files[j] + '<br>';
+        tmp += m_row_start(0);
+        //tmp += m_col(1, '');
+        tmp += m_col(4, data[i].files[j].filename);
+        tmp += m_col(2, humanFileSize(data[i].files[j].info.format.size));// + ' (' + data[i].files[j].info.format.size + ')');
+        tmp += m_col(2, data[i].files[j].info.format.duration_str);
+        tmp += m_col(2, humanFileSize(data[i].files[j].info.format.bit_rate) + '/s');
+        tmp += m_col(2, data[i].files[j].info.streams[0].width + 'x' + data[i].files[j].info.streams[0].height);
+        tmp += m_row_end();
       }
       tmp += '<br><b>파일명 변경</b><br>'
       for (j in data[i].fix_files) {
@@ -64,6 +71,8 @@ function make_list(data2) {
           tmp += '<br><div class="container-fluid row"><div class="input-group col-sm-6 form-inline"><input id="'+i+'_'+j+'_newfilename" name="'+i+'_'+j+'_newfilename" class="form-control form-control-sm" value="'+data[i].fix_files[j].newfilename+'"></div>';
           tmp2 = m_button('change_btn', '파일명 변경', [{'key':'idx', 'value':i+'_'+j}]);
           tmp2 += m_button('delete_btn', '파일 삭제', [{'key':'idx', 'value':i+'_'+j}]);
+          tmp2 += m_button('play_btn', 'Play', [{'key':'idx', 'value':i+'_'+j}, {'key':'filename', 'value':data[i].base + '/' + data[i].fix_files[j].filename}]);
+          tmp2 += m_button('json_btn', '비디오 정보', [{'key':'idx1', 'value':i}, {'key':'idx2', 'value':j}]);
           tmp += m_button_group(tmp2)
           tmp += '</div>';
         } else if (data[i].fix_files[j].ret == 'change_True') {
@@ -158,9 +167,29 @@ function send_command(name, command, arg1, arg2) {
 }
 
 
+$("body").on('click', '#play_btn', function(e){
+  e.preventDefault();
+  var idx = $(this).data('idx');
+  var filename = $(this).data('filename');
+  url = window.location.protocol + "//" + window.location.host + '/ffmpeg/streaming?mode=file&value=' + filename;
+  document.getElementById("video_modal_title").innerHTML = filename;
+  str = '<video oncontextmenu="return false;" id="video_modal_video" width="766" controls autoplay muted preload="metadata">';
+  console.log(url);
+  if (filename.endsWith('.mp4')) {
+    str += '<source src="' + url + '" type="video/mp4"></video>';
+  } else {
+    str += '<source src="' + url + '" type="video/webm"></video>';
+  }
+  document.getElementById("video_player_body").innerHTML = str;
+  $("#video_modal").modal();
+});
 
-
-
+$("body").on('click', '#json_btn', function(e){
+  e.preventDefault();
+  var idx1 = parseInt($(this).data('idx1'));
+  var idx2 = parseInt($(this).data('idx2'));
+  m_modal(current_data.data[idx1].files[idx2].info);
+});
 
 
 
