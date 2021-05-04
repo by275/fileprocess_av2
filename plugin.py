@@ -21,7 +21,7 @@ from framework.common.plugin import get_model_setting, Logic, default_route
 class P(object):
     package_name = __name__.split('.')[0]
     logger = get_logger(package_name)
-    blueprint = Blueprint(package_name, package_name, url_prefix='/%s' %  package_name, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
+    blueprint = Blueprint(package_name, package_name, url_prefix='/%s' %  package_name, template_folder=os.path.join(os.path.dirname(__file__), 'templates'), static_folder=os.path.join(os.path.dirname(__file__), 'static'))
     menu = {
         'main' : [package_name, u'AV v2'],
         'sub' : [
@@ -33,7 +33,7 @@ class P(object):
                 ['setting', u'설정'], ['list', '처리결과'],
             ],
             'jav_censored_tool' : [
-                ['cd3', u'cd3 변경'],  #['play', u'play'],
+                ['cd3', u'cd3 변경'],  ['purge', u'중복제거'],#['play', u'play'],
             ],
         }
     }  

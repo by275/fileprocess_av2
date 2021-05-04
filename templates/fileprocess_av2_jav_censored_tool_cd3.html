@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+<script src="{{ url_for('.static', filename='tool.js') }}"></script>
 
 {{ macros.setting_input_text_and_buttons('jav_censored_tool_cd3_path', 'Path', [['select_cd3_path_btn', '경로 선택']], value=arg['jav_censored_tool_cd3_path'],  placeholder='-C 파일을 cd3으로 변경할 루트 폴더 경로') }}
 {{ macros.m_row_start('0') }}
@@ -32,7 +33,7 @@ socket.on('start', function(data){
   send_command('cd3', 'data', '', '');
 });
 
-socket.on('data', function(data){
+socket.on('cd3_data', function(data){
   make_list(data);
 });
 
@@ -71,8 +72,8 @@ function make_list(data2) {
           tmp += '<br><div class="container-fluid row"><div class="input-group col-sm-6 form-inline"><input id="'+i+'_'+j+'_newfilename" name="'+i+'_'+j+'_newfilename" class="form-control form-control-sm" value="'+data[i].fix_files[j].newfilename+'"></div>';
           tmp2 = m_button('change_btn', '파일명 변경', [{'key':'idx', 'value':i+'_'+j}]);
           tmp2 += m_button('delete_btn', '파일 삭제', [{'key':'idx', 'value':i+'_'+j}]);
-          tmp2 += m_button('play_btn', 'Play', [{'key':'idx', 'value':i+'_'+j}, {'key':'filename', 'value':data[i].base + '/' + data[i].fix_files[j].filename}]);
-          tmp2 += m_button('json_btn', '비디오 정보', [{'key':'idx1', 'value':i}, {'key':'idx2', 'value':j}]);
+          tmp2 += m_button('play_btn', 'Play', [{'key':'filename', 'value':data[i].base + '/' + data[i].fix_files[j].filename}]);
+          tmp2 += m_button('json_btn', '비디오 정보', [{'key':'idx', 'value':i+'_'+j}]);
           tmp += m_button_group(tmp2)
           tmp += '</div>';
         } else if (data[i].fix_files[j].ret == 'change_True') {
@@ -90,14 +91,7 @@ function make_list(data2) {
 
       row += m_col(10, tmp);
       row += m_row_end();
-      /*
-      if (i == 0) {
-        str = row;
-      } else {
-        str = row + m_hr(0) + str;
-      }
-      */
-     str += row;
+      str += row;
       if (i != data.length -1) str += m_hr();
     }
   }
@@ -144,55 +138,6 @@ $("body").on('click', '#delete_btn', function(e){
   idx = $(this).data('idx');
   send_command('cd3', 'delete', idx, '');
 });
-
-function send_command(name, command, arg1, arg2) {
-  $.ajax({
-    url: '/' + package_name + '/ajax/' + sub + '/send_command',
-    type: "POST", 
-    cache: false,
-    data:{name:name, command:command, arg1:arg1, arg2:arg2},
-    dataType: "json",
-    success: function (ret) {
-      if (command == 'data') {
-        make_list(ret);
-      
-      } else {
-        notify(ret.msg, ret.ret);
-      }
-      if (command == 'change' || command == 'delete') {
-        make_list(ret.list_data);
-      }
-    }
-  });
-}
-
-
-$("body").on('click', '#play_btn', function(e){
-  e.preventDefault();
-  var idx = $(this).data('idx');
-  var filename = $(this).data('filename');
-  url = window.location.protocol + "//" + window.location.host + '/ffmpeg/streaming?mode=file&value=' + filename;
-  document.getElementById("video_modal_title").innerHTML = filename;
-  str = '<video oncontextmenu="return false;" id="video_modal_video" width="766" controls autoplay muted preload="metadata">';
-  console.log(url);
-  if (filename.endsWith('.mp4')) {
-    str += '<source src="' + url + '" type="video/mp4"></video>';
-  } else {
-    str += '<source src="' + url + '" type="video/webm"></video>';
-  }
-  document.getElementById("video_player_body").innerHTML = str;
-  $("#video_modal").modal();
-});
-
-$("body").on('click', '#json_btn', function(e){
-  e.preventDefault();
-  var idx1 = parseInt($(this).data('idx1'));
-  var idx2 = parseInt($(this).data('idx2'));
-  m_modal(current_data.data[idx1].files[idx2].info);
-});
-
-
-
 
 </script> 
 

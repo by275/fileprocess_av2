@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block content %}
+<script src="{{ url_for('.static', filename='tool.js') }}"></script>
+
+{{ macros.setting_input_text_and_buttons('jav_censored_tool_purge_path', 'Path', [['jav_censored_tool_purge_path_btn', '경로 선택']], value=arg['jav_censored_tool_purge_path'],  placeholder='중복 여부를 확인할 루트 폴더 경로') }}
+{{ macros.m_row_start('0') }}
+{{ macros.m_row_end() }}
+{{ macros.m_button_group([['command_start_btn', '시작'], ['command_stop_btn', '중지']])}}
+
+{{ macros.m_row_start('0') }}
+{{ macros.m_row_end() }}
+
+{{ macros.m_hr_head_top() }}
+{{ macros.m_row_start('0') }}
+{{ macros.m_col(2,  macros.m_strong('Path')) }}
+{{ macros.m_col(10,  macros.m_strong('Info')) }}
+{{ macros.m_row_end() }}
+{{ macros.m_hr_head_bottom() }}
+<div id="list_div"></div>
+
+
+<script type="text/javascript">
+
+var package_name = "{{arg['package_name'] }}";
+var sub = "{{arg['sub']}}";
+var current_data = null;
+socket = io.connect(window.location.protocol + "//" + document.domain + ":" + location.port + "/" + package_name + '/' + sub);
+
+$(document).ready(function(){
+});
+
+socket.on('start', function(data){
+  send_command('purge', 'data', '', '');
+});
+
+socket.on('purge_data', function(data){
+  make_list(data);
+});
+
+function make_list(data2) {
+  current_data = data2;
+  data = data2.data;
+  str = '';
+  if (data2.status) {
+    str += '<br><h4>탐색중...</h4>'
+  }
+  if (data == null || data.length == 0) {
+    str += '<br><h4>목록이 없습니다.</h4>'
+  } else {
+    for (i in data) {
+      row = '';
+      row += m_row_start_hover();
+      row += m_col(2, data[i].code);
+      
+      tmp = '<b>폴더</b> : ' + data[i].base;
+      tmp += '<br><b>코드 파일 목록</b><br>'
+      for (j in data[i].files) {
+        if (data[i].files[j].filename == '') continue;
+        tmp += m_row_start(3);
+        //tmp += m_col(1, '');
+        tmp += m_col(4, data[i].files[j].filename);
+        tmp += m_col(2, humanFileSize(data[i].files[j].info.format.size));// + ' (' + data[i].files[j].info.format.size + ')');
+        tmp += m_col(2, data[i].files[j].info.format.duration_str);
+        tmp += m_col(2, humanFileSize(data[i].files[j].info.format.bit_rate) + '/s');
+        tmp += m_col(2, data[i].files[j].info.streams[0].width + 'x' + data[i].files[j].info.streams[0].height);
+        tmp += m_row_end();
+        tmp += m_row_start(2);
+        tmp += '<div class="container-fluid row"><div class="input-group col-sm-6 form-inline"><input id="'+i+'_'+j+'_newfilename" name="'+i+'_'+j+'_newfilename" class="form-control form-control-sm" value="'+data[i].files[j].filename+'"></div>';
+        tmp2 = m_button('change_btn', '파일명 변경', [{'key':'idx', 'value':i+'_'+j}]);
+        tmp2 += m_button('delete_btn', '파일 삭제', [{'key':'idx', 'value':i+'_'+j}]);
+        tmp2 += m_button('play_btn', 'Play', [{'key':'filename', 'value':data[i].base + '/' + data[i].files[j].filename}]);
+        tmp2 += m_button('json_btn', '비디오 정보', [{'key':'idx', 'value':i+'_'+j}]);
+        tmp += m_button_group(tmp2)
+        tmp += '</div>';
+        tmp += m_row_end();
+        if (data[i].files[j].log != '') {
+          tmp += m_row_start(0); 
+          //tmp += m_col(1, '');
+          tmp += m_col(12, '<pre>'+data[i].files[j].log+'</pre>');
+          tmp += m_row_end();
+        }
+        
+        if (j != data[i].files.length -1) tmp += m_hr();
+      }
+      row += m_col(10, tmp);
+      row += m_row_end();
+      str += row;
+      if (i != data.length -1) str += m_hr();
+    }
+  }
+  document.getElementById("list_div").innerHTML = str;
+}
+
+
+
+
+$("body").on('click', '#jav_censored_tool_purge_path_btn', function(e){
+  e.preventDefault();
+  var path = $('#jav_censored_tool_purge_path').val().trim();
+  if (path == '') path = '/'
+  m_select_local_file_modal("중복 제거 작업 경로", path, true, function(result){
+    $('#jav_censored_tool_purge_path').val(result);
+  });
+});
+
+$("body").on('click', '#command_start_btn', function(e){
+  e.preventDefault();
+  send_command('purge', 'start', $('#jav_censored_tool_purge_path').val().trim(), 'false');
+});
+
+
+$("body").on('click', '#command_stop_btn', function(e){
+  e.preventDefault();
+  send_command('purge', 'stop', '', '');
+});
+
+$("body").on('click', '#change_btn', function(e){
+  e.preventDefault();
+  var idx = $(this).data('idx');
+  send_command('purge', 'change', idx, $('#' + idx + '_newfilename').val().trim());
+});
+
+
+$("body").on('click', '#delete_btn', function(e){
+  e.preventDefault();
+  idx = $(this).data('idx');
+  send_command('purge', 'delete', idx, '');
+});
+
+</script> 
+
+{% endblock %}
