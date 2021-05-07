@@ -213,7 +213,9 @@ class LogicJavCensored(LogicModuleBase):
                             # 2021-04-30
                             try:
                                 tmp = os.path.splitext(filename)
-                                if tmp[0].lower().endswith('-c') or tmp[0].lower().endswith('-c]'):
+                                match = re.compile(r'\d+\-?c(\.|\].)').search(tmp[0].lower())
+                                #if tmp[0].lower().endswith('-c') or tmp[0].lower().endswith('-c]'):
+                                if match:
                                     for cd in ['1', '2', '4']:
                                         cd_tmp = os.path.join(target_folder, '%scd%s%s' % (search_name.replace(' ', '-'), cd, tmp[1]))
                                         if os.path.exists(os.path.join(target_folder, '%scd%s%s' % (search_name.replace(' ', '-'), cd, tmp[1]))):
