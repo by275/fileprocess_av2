@@ -213,7 +213,7 @@ class LogicJavCensored(LogicModuleBase):
                             # 2021-04-30
                             try:
                                 tmp = os.path.splitext(filename)
-                                match = re.compile(r'\d+\-?c(\.|\].)').search(tmp[0].lower())
+                                match = re.compile(r'\d+\-?c(\.|\].)|\(').search(tmp[0].lower())
                                 #if tmp[0].lower().endswith('-c') or tmp[0].lower().endswith('-c]'):
                                 if match:
                                     for cd in ['1', '2', '4']:
