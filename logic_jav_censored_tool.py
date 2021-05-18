@@ -112,7 +112,7 @@ class LogicJavCensoredTool(LogicModuleBase):
                     logger.debug('CELERY on_message not process.. only get() start')
                     ret = result.get()
             else:
-                self.data[tool_name]['task']()
+                self.data[tool_name]['task'](None)
             self.data[tool_name]['is_working'] = False
             self.refresh_data(tool_name)
         except Exception as e: 
