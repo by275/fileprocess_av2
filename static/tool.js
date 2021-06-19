@@ -22,12 +22,12 @@ $("body").on('click', '#json_btn', function(e){
   m_modal(current_data.data[idx1].files[idx2].info);
 });
 
-function send_command(name, command, arg1, arg2) {
+function send_command(name, command, arg1, arg2, arg3) {
   $.ajax({
     url: '/' + package_name + '/ajax/' + sub + '/send_command',
     type: "POST", 
     cache: false,
-    data:{name:name, command:command, arg1:arg1, arg2:arg2},
+    data:{name:name, command:command, arg1:arg1, arg2:arg2, arg3:arg3},
     dataType: "json",
     success: function (ret) {
       if (ret.msg != null) notify(ret.msg, ret.ret);
