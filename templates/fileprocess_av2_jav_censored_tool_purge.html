@@ -59,10 +59,14 @@ function make_list(data2) {
         tmp += m_row_start(3);
         //tmp += m_col(1, '');
         tmp += m_col(4, data[i].files[j].filename);
-        tmp += m_col(2, humanFileSize(data[i].files[j].info.format.size));// + ' (' + data[i].files[j].info.format.size + ')');
-        tmp += m_col(2, data[i].files[j].info.format.duration_str);
-        tmp += m_col(2, humanFileSize(data[i].files[j].info.format.bit_rate) + '/s');
-        tmp += m_col(2, data[i].files[j].info.streams[0].width + 'x' + data[i].files[j].info.streams[0].height);
+        if (data[i].files[j].info != null) {
+          tmp += m_col(2, humanFileSize(data[i].files[j].info.format.size));// + ' (' + data[i].files[j].info.format.size + ')');
+          tmp += m_col(2, data[i].files[j].info.format.duration_str);
+          tmp += m_col(2, humanFileSize(data[i].files[j].info.format.bit_rate) + '/s');
+          tmp += m_col(2, data[i].files[j].info.streams[0].width + 'x' + data[i].files[j].info.streams[0].height);
+        } else {
+          tmp += m_col(8, '');
+        }
         tmp += m_row_end();
         tmp += m_row_start(2);
         tmp += '<div class="container-fluid row"><div class="input-group col-sm-6 form-inline"><input id="'+i+'_'+j+'_newfilename" name="'+i+'_'+j+'_newfilename" class="form-control form-control-sm" value="'+data[i].files[j].filename+'"></div>';

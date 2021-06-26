@@ -23,6 +23,7 @@ ModelSetting = P.ModelSetting
 
 #########################################################
 
+
 class LogicJavCensoredTool(LogicModuleBase):
     db_default = {
         'jav_censored_tool_db_version' : '1',
@@ -347,3 +348,6 @@ class LogicJavCensoredTool(LogicModuleBase):
             logger.error('Exception:%s', exception)
             logger.error(traceback.format_exc())
 
+
+## ffmpeg -ss 00:00:30 -i HND-980-C.mp4 -frames:v 1  -f image2 a2.jpg
+# 
