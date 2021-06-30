@@ -147,6 +147,7 @@ class LogicJavCensored(LogicModuleBase):
                             
                             # 검색용 키워드
                             search_name = ToolExpandFileProcess.change_filename_censored(newfilename)
+                            search_name = search_name.split('.')[0]
                             search_name = os.path.splitext(search_name)[0].replace('-', ' ')
                             search_name = re.sub('\s*\[.*?\]', '', search_name).strip()
                             match = re.search(r'(?P<cd>cd\d{1,2})$', search_name) 
