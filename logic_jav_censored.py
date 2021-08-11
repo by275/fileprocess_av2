@@ -183,7 +183,7 @@ class LogicJavCensored(LogicModuleBase):
                                         meta_info = MetadataLogic.get_module('jav_censored').info(data[0]['code'])
                                         folders = LogicJavCensored.process_forlder_format(entity.move_type, meta_info)
                                         target_folder = ModelSetting.get('jav_censored_meta_dvd_path')
-                                        if u'고품질VR' in meta_info['genre'] or u'VR전용' in meta_info['genre'] or meta_info['genre'].find('[VR]') != -1:
+                                        if u'고품질VR' in meta_info['genre'] or u'VR전용' in meta_info['genre'] or meta_info['title'].find('[VR]') != -1:
                                             vr_path = ModelSetting.get('jav_censored_meta_dvd_vr_path')
                                             if vr_path != '':
                                                 target_folder = vr_path
