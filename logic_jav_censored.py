@@ -190,13 +190,12 @@ class LogicJavCensored(LogicModuleBase):
                 return Path(target_root).joinpath(*folders), move_type, meta_info
 
         move_type = "no_meta"
-        folders = LogicJavCensored.process_folder_format(move_type, search_name)
         target_root = ModelSetting.get("jav_censored_meta_no_path").strip()
         if not target_root or not Path(target_root).exists():
             target_root = Path(ModelSetting.get("jav_censored_temp_path").strip())
             target_root = str(target_root.joinpath("[NO META]"))
         logger.info("메타 없음으로 최종 판별")
-        return Path(target_root).joinpath(*folders), move_type, None
+        return Path(target_root), move_type, None
 
     @staticmethod
     def __task(file):
@@ -261,7 +260,7 @@ class LogicJavCensored(LogicModuleBase):
             entity.move_type = None
             return entity
 
-        newfile = target_dir.joinpath(newfilename)
+        newfile = target_dir.joinpath(file.name if move_type == "no_meta" else newfilename)
         if file == newfile:
             # 처리한 폴더를 다시 처리했을 때 중복으로 삭제되지 않아야 함
             entity.move_type = None
@@ -270,7 +269,7 @@ class LogicJavCensored(LogicModuleBase):
 
         entity.move_type = move_type
         entity.target_dir = str(target_dir)
-        entity.target_filename = newfilename
+        entity.target_filename = newfile.name
 
         if not target_dir.exists():
             target_dir.mkdir(parents=True)
