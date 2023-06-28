@@ -1,2 +1,7 @@
 *.pyo
 *.pyc
+*.log
+tmp/
+.vscode/
+venv/
+secret.py

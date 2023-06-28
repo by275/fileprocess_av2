@@ -1,10 +1,10 @@
 {
-    "version": "0.2.0.0",
+    "version": "0.2.0.0p",
     "name": "fileprocess_av2",
     "category_name": "fileprocess",
     "icon": "",
-    "developer": "soju6jan",
+    "developer": "by275",
     "description": "파일처리 - AV v2",
-    "home": "https://github.com/soju6jan/fileprocess_av2",
+    "home": "https://github.com/by275/fileprocess_av2",
     "more": ""
 }

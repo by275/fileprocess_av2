@@ -39,13 +39,13 @@ class P(object):
     }  
 
     plugin_info = {
-        'version' : '0.2.0.0',
+        'version' : '0.2.0.0p',
         'name' : package_name,
         'category_name' : 'fileprocess',
         'icon' : '',
-        'developer' : u'soju6jan',
-        'description' : u'파일처리 - AV v2',
-        'home' : 'https://github.com/soju6jan/%s' % package_name,
+        'developer' : 'by275',
+        'description' : '파일처리 - AV v2',
+        'home' : 'https://github.com/by275/%s' % package_name,
         'more' : '',
     }
     ModelSetting = get_model_setting(package_name, logger)
