@@ -306,7 +306,10 @@ class LogicJavCensored(LogicModuleBase):
     def __add_meta_no_path():
         meta_no_path = ModelSetting.get("jav_censored_meta_no_path").strip()
         if not meta_no_path:
-            return []
+            meta_no_path = Path(ModelSetting.get("jav_censored_temp_path").strip()).joinpath("[NO META]")
+            if not meta_no_path.is_dir():
+                return []
+            meta_no_path = str(meta_no_path)
         meta_no_retry_every = ModelSetting.get_int("jav_censored_meta_no_retry_every")
         if meta_no_retry_every <= 0:
             return []
@@ -319,12 +322,6 @@ class LogicJavCensored(LogicModuleBase):
     @staticmethod
     @celery.task
     def task():
-        src_list = LogicJavCensored.get_path_list("jav_censored_download_path")
-        src_list += LogicJavCensored.__add_meta_no_path()
-        if not src_list:
-            logger.warning("'다운로드 폴더'가 지정되지 않음. 작업 중단!")
-            return
-
         no_censored_path = ModelSetting.get("jav_censored_temp_path").strip()
         if not no_censored_path:
             logger.warning("'처리 실패시 이동 폴더'가 지정되지 않음. 작업 중단!")
@@ -332,6 +329,12 @@ class LogicJavCensored(LogicModuleBase):
         no_censored_path = Path(no_censored_path)
         if not no_censored_path.is_dir():
             logger.warning("'처리 실패시 이동 폴더'가 존재하지 않음. 작업 중단: %s", no_censored_path)
+            return
+
+        src_list = LogicJavCensored.get_path_list("jav_censored_download_path")
+        src_list += LogicJavCensored.__add_meta_no_path()
+        if not src_list:
+            logger.warning("'다운로드 폴더'가 지정되지 않음. 작업 중단!")
             return
 
         min_size = ModelSetting.get_int("jav_censored_min_size")
