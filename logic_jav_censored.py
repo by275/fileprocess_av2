@@ -190,12 +190,19 @@ class LogicJavCensored(LogicModuleBase):
                 return Path(target_root).joinpath(*folders), move_type, meta_info
 
         move_type = "no_meta"
+        # NO META인 경우 폴더 구조를 만들지 않음
         target_root = ModelSetting.get("jav_censored_meta_no_path").strip()
-        if not target_root or not Path(target_root).exists():
-            target_root = Path(ModelSetting.get("jav_censored_temp_path").strip())
-            target_root = str(target_root.joinpath("[NO META]"))
+        if not (target_root and Path(target_root).exists()):
+            target_root = Path(ModelSetting.get("jav_censored_temp_path").strip()).joinpath("[NO META]")
         logger.info("메타 없음으로 최종 판별")
         return Path(target_root), move_type, None
+
+    @staticmethod
+    def __move(src, trg):
+        if trg.exists():
+            trg = trg.with_name(f"[{int(time.time())}] {trg.name}")
+        shutil.move(src, trg)
+        logger.debug("Moved: %s -> %s", src.name, trg)
 
     @staticmethod
     def __task(file):
@@ -257,34 +264,31 @@ class LogicJavCensored(LogicModuleBase):
         entity = ModelJavcensoredItem(str(file.parent), file.name)
         if move_type is None or target_dir is None:
             logger.warning("타겟 폴더를 결정할 수 없음")
-            entity.move_type = None
-            return entity
-
-        newfile = target_dir.joinpath(file.name if move_type == "no_meta" else newfilename)
-        if file == newfile:
-            # 처리한 폴더를 다시 처리했을 때 중복으로 삭제되지 않아야 함
-            entity.move_type = None
-            return entity
-        logger.debug("MOVE: %s -> %s", file.name, newfile)
-
-        entity.move_type = move_type
-        entity.target_dir = str(target_dir)
-        entity.target_filename = newfile.name
+            return entity.set_move_type(None)
 
         if not target_dir.exists():
             target_dir.mkdir(parents=True)
 
+        if move_type == "no_meta":
+            newfile = target_dir.joinpath(file.name)  # 원본 파일명 그대로
+            if file == newfile:
+                # 처리한 폴더를 다시 처리했을 때 중복으로 삭제되지 않아야 함
+                return entity.set_move_type(None)
+            LogicJavCensored.__move(file, newfile)
+            return entity.set_target(newfile).set_move_type(move_type)
+
+        newfile = target_dir.joinpath(newfilename)
+
         if LogicJavCensored.__is_duplicate(file, newfile):
-            logger.debug("EXISTS: %s", newfile)
+            logger.debug("동일 파일(크기, 이름 기준)이 존재함: %s -> %s", file, newfile.parent)
             remove_path = ModelSetting.get("jav_censored_remove_path").strip()
             if remove_path == "":
                 file.unlink()
+                logger.debug("Deleted: %s", file)
             else:
                 dup = Path(remove_path).joinpath(file.name)
-                if dup.exists():
-                    dup = Path(remove_path).joinpath(f"[{int(time.time())}] {file.name}")
-                shutil.move(file, dup)
-            entity.move_type += "_already_exist"
+                LogicJavCensored.__move(file, dup)
+            move_type += "_already_exist"
 
         if file.exists():
             shutil.move(file, newfile)
@@ -300,7 +304,7 @@ class LogicJavCensored(LogicModuleBase):
                 Secret.autoscan(str(newfile))
             except ImportError:
                 pass
-        return entity
+        return entity.set_target(newfile).set_move_type(move_type)
 
     @staticmethod
     def __add_meta_no_path():
@@ -533,6 +537,16 @@ class ModelJavcensoredItem(db.Model):
     def save(self):
         db.session.add(self)
         db.session.commit()
+
+    def set_move_type(self, move_type):
+        self.move_type = move_type
+        return self
+
+    def set_target(self, trg):
+        trg = Path(trg)
+        self.target_dir = str(trg.parent)
+        self.target_filename = trg.name
+        return self
 
     @classmethod
     def get_by_id(cls, _id):
