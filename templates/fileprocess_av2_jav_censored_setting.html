@@ -52,7 +52,7 @@
 
       {{ macros.setting_input_text('jav_censored_meta_dvd_path', '정식발매 영상 매칭시 이동 경로', desc=['정식발매 영상 매칭시 이동할 루트 폴더입니다.'], value=arg['jav_censored_meta_dvd_path']) }}
       {{ macros.setting_input_text('jav_censored_meta_dvd_vr_path', '정식발매 VR영상 이동 경로', desc=['빈값이면 VR영상을 따로 분리하지 않습니다.'], value=arg['jav_censored_meta_dvd_vr_path']) }}
-      {{ macros.setting_checkbox('jav_censored_meta_dvd_use_dmm_only', '정식발매 영상 매칭에 DMM만 사용', value=arg['jav_censored_meta_dvd_use_dmm_only'], desc=['On: DMM만 사용해서 정식 발매 여부를 판단']) }}
+      {{ macros.setting_checkbox('jav_censored_meta_dvd_use_dmm_only', '정식발매 영상 판단에 DMM+MGS만 사용', value=arg['jav_censored_meta_dvd_use_dmm_only'], desc=['On: DMM+MGS 사용해서 정식 발매 여부를 판단', 'Off: 메타데이터 플러그인 설정을 따릅니다.']) }}
       {{ macros.setting_input_text('jav_censored_folder_format_actor', '배우 검색시 폴더 구조', desc=['정식발매 영상이고 배우가 한명일 경우에만 작동할 폴더 구조입니다.', '예) 배우별/{actor}/{code} 배우별/배우폴더/품번폴더 생성 후 이동', '빈값이면 기본 폴더 구조를 사용합니다.'], value=arg['jav_censored_folder_format_actor']) }}
       {{ macros.setting_input_textarea('jav_censored_meta_dvd_labels_exclude', '정식발매 영상 제외 레이블', desc=['정식발매 영상 매칭에서 제외할 레이블', '구분자: 콤마'], value=arg['jav_censored_meta_dvd_labels_exclude'], row='3') }}
       {{ macros.setting_input_textarea('jav_censored_meta_dvd_labels_include', '정식발매 영상 포함 레이블', desc=['정식발매 영상 매칭에 실패해도 포함시킬 레이블', '구분자: 콤마'], value=arg['jav_censored_meta_dvd_labels_include'], row='3') }}

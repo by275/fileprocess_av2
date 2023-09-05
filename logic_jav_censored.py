@@ -136,8 +136,12 @@ class LogicJavCensored(LogicModuleBase):
         from metadata import Logic as MetadataLogic
 
         if ModelSetting.get_bool("jav_censored_meta_dvd_use_dmm_only"):
-            logger.info("정식발매 영상 매칭에 DMM만 사용")
-            data = MetadataLogic.get_module("jav_censored").search2(search_name, "dmm", manual=False) or []
+            logger.info("정식발매 영상 판단에 DMM+MGS만 사용")
+            data = (
+                MetadataLogic.get_module("jav_censored").search2(search_name, "dmm", manual=False)
+                or MetadataLogic.get_module("jav_censored").search2(search_name, "mgsdvd", manual=False)
+                or []
+            )
         else:
             data = MetadataLogic.get_module("jav_censored").search(search_name, manual=False)
 
